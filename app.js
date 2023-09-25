@@ -12,9 +12,7 @@ const app = express();
 // Middleware
 app.use(express.json());
 // Enable CORS only for a specific origin
-app.use(cors({
-  origin: 'http://localhost:3000'  // replace with your application's actual address
-}));
+app.use(cors());
 
 // MongoDB Atlas connection
 const mongoURI = 'mongodb+srv://anandsatyan:Krissna1.@moneymash.yacpjgs.mongodb.net/';
