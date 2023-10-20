@@ -6,6 +6,7 @@ const defaultRoutes = require('./routes/defaultRoutes');
 const investorRoutes = require('./routes/investorRoutes');
 const companyRoutes = require('./routes/companyRoutes');
 const userRoutes = require('./routes/userRoutes');
+const mandateRoutes = require('./routes/mandateRoutes');
 const https = require('https');
 const app = express();
 
@@ -25,6 +26,7 @@ app.use('/', defaultRoutes);
 app.use('/investors', investorRoutes);
 app.use('/users', userRoutes);
 app.use('/companies', companyRoutes);
+app.use('/mandates', mandateRoutes);
 
 // Start the Server
 const PORT = 3001;

@@ -1,36 +1,29 @@
 const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
-const investorSchema = new mongoose.Schema({
-  investorId: String,
-  name: String,
-  type: String,
+
+const InvestorSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  type: { type: String, required: true },
   website: String,
   linkedInProfile: String,
   avgInvestmentAmount: Number,
   totalInvestmentsMade: Number,
   investedCompanies: [String],
   investmentStage: String,
-  industries: [String],
+  industryFocus: [String],
   geographicFocus: String,
-  fundSize: Number,
+  fundSize: String,
   exitHistory: [String],
-  primaryContactPerson: {
-    name: String,
-    position: String
-  },
+  primaryContactName: String,
+  primaryContactPosition: String,
   contactEmail: String,
-  contactPhone: String,
+  contactPhone: Number,
   rating: Number,
   reviews: [String],
   tags: [String],
   timeToDecision: String,
-  dueDiligenceRequirements: [String],
   notes: String,
   status: String,
   createdAt: { type: Date, default: Date.now },
-  people: [{ type: Schema.Types.ObjectId, ref: 'People' }],
-  portfolioCompanies: [{ type: Schema.Types.ObjectId, ref: 'Company' }],
-  lastUpdated: Date
 });
 
-module.exports = mongoose.model('Investor', investorSchema);
+module.exports = mongoose.model('Investor', InvestorSchema);

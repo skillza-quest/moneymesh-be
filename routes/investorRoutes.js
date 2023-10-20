@@ -6,28 +6,55 @@ const XLSX = require('xlsx');
 
 const upload = multer({ dest: 'uploads/' });
 
-// Bulk Upload
-router.post('/upload', upload.single('file'), (req, res) => {
+// Bulk Upload route
+router.post('/bulk-upload', upload.single('file'), async (req, res) => {
+  try {
     const workbook = XLSX.readFile(req.file.path);
     const sheet_name_list = workbook.SheetNames;
     const data = XLSX.utils.sheet_to_json(workbook.Sheets[sheet_name_list[0]]);
-    
-    data.forEach(async (row) => {
-      const newInvestor = new Investor({
-        investorId: row.InvestorID,
-        name: row.Name,
-        type: row.Type,
-        // ... other fields
-      });
-      
-      try {
+    let skippedRows = 0;
+    console.log("First row from Excel:", data[0]);
+
+    for (const row of data) {
+      if (row['Name'] && row['Type']) {
+        const newInvestor = new Investor({
+          name: row['Name'],
+          type: row['Type'],
+          website: row['Website'],
+          linkedInProfile: row['LinkedInProfile'],
+          avgInvestmentAmount: row['AvgInvestmentAmount'],
+          totalInvestmentsMade: row['TotalInvestmentsMade'],
+          investedCompanies: row['InvestedCompanies'] ? row['InvestedCompanies'].split(',') : [],
+          investmentStage: row['InvestmentStage'],
+          industryFocus: row['IndustryFocus'] ? row['IndustryFocus'].split(',') : [],
+          geographicFocus: row['GeographicFocus'],
+          fundSize: row['FundSize'],
+          exitHistory: row['ExitHistory'] ? row['ExitHistory'].split(',') : [],
+          primaryContactName: row['PrimaryContactName'],
+          primaryContactPosition: row['PrimaryContactPosition'],
+          contactEmail: row['ContactEmail'],
+          contactPhone: row['ContactPhone'],
+          rating: row['Rating'],
+          reviews: row['Reviews'] ? row['Reviews'].split(',') : [],
+          tags: row['Tags'] ? row['Tags'].split(',') : [],
+          timeToDecision: row['TimeToDecision'],
+          dueDiligenceRequirements: row['DueDiligenceRequirements'] ? row['DueDiligenceRequirements'].split(',') : [],
+          notes: row['Notes'],
+          status: row['Status']
+        });
+        if (skippedRows === 0) {
+          console.log("First newInvestor object:", newInvestor);
+        }
         await newInvestor.save();
-      } catch (err) {
-        console.log(`Failed to insert ${row.InvestorID}: ${err}`);
+      } else {
+        skippedRows++;
       }
-    });
-    res.status(201).send('Data successfully uploaded');
-  });
+    }
+    res.status(201).send(`Data successfully uploaded. Skipped ${skippedRows} rows due to missing name or type.`);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
 // Create
 router.post('/', async (req, res) => {
