@@ -58,14 +58,67 @@ router.post('/bulk-upload', upload.single('file'), async (req, res) => {
 
 // Create
 router.post('/', async (req, res) => {
-  const newInvestor = new Investor(req.body);
+  const {
+    name,
+    type,
+    website,
+    linkedInProfile,
+    avgInvestmentAmount,
+    totalInvestmentsMade,
+    investedCompanies,
+    investmentStage,
+    industryFocus,
+    geographicFocus,
+    fundSize,
+    exitHistory,
+    primaryContactName,
+    primaryContactPosition,
+    contactEmail,
+    contactPhone,
+    rating,
+    reviews,
+    tags,
+    timeToDecision,
+    notes,
+    status,
+    creatorId  // Not compulsory
+  } = req.body;
+
   try {
-    await newInvestor.save();
-    res.status(201).json(newInvestor);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
+    const newInvestor = new Investor({
+      name,
+      type,
+      website,
+      linkedInProfile,
+      avgInvestmentAmount,
+      totalInvestmentsMade,
+      investedCompanies,
+      investmentStage,
+      industryFocus,
+      geographicFocus,
+      fundSize,
+      exitHistory,
+      primaryContactName,
+      primaryContactPosition,
+      contactEmail,
+      contactPhone,
+      rating,
+      reviews,
+      tags,
+      timeToDecision,
+      notes,
+      status,
+      creatorId
+    });
+
+    const savedInvestor = await newInvestor.save();
+    res.status(201).json(savedInvestor);
+  } catch (error) {
+    console.error('Could not save the investor:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
   }
 });
+
 
 // Read All
 router.get('/', async (req, res) => {

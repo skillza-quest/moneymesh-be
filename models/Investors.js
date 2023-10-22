@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const InvestorSchema = new mongoose.Schema({
+  creatorId: { type: String },
   name: { type: String, required: true },
   type: { type: String, required: true },
   website: String,

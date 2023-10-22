@@ -2,6 +2,11 @@ const express = require('express');
 const router = express.Router();
 const Mandate = require('../models/Mandates');
 const Investor = require('../models/Investors');
+const crypto = require('crypto');
+
+const inviteTokens = {};
+
+
 // Create a new Mandate
 router.post('/create', async (req, res) => {
     const newMandate = new Mandate(req.body);
@@ -211,4 +216,33 @@ router.get('/user/:userId', async (req, res) => {
     }
   });
     
+// Generate invite link
+  router.post('/generate-invite/:mandateId', (req, res) => {
+    const { mandateId } = req.params;
+    const token = crypto.randomBytes(16).toString('hex');
+    inviteTokens[token] = { mandateId, expires: Date.now() + 60000 * 60 * 24, consumed: false }; // expires in 1 day
+    res.json({ token });
+  });
+  
+  // Accept invite
+  router.post('/accept-invite/:token', async (req, res) => {
+    const { token } = req.params;
+    const invite = inviteTokens[token]; 
+      if (!invite || invite.expires < Date.now() || invite.consumed) {
+      return res.status(400).json({ error: 'Invalid or expired token' });
+    }
+    const userId = req.userId;  
+    try {
+      const mandate = await Mandate.findById(invite.mandateId);
+      if (!mandate) {
+        return res.status(404).json({ error: 'Mandate not found' });
+      }
+      mandate.collaboratorIds.push(userId);
+      await mandate.save();
+      invite.consumed = true;  
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: 'Could not add collaborator' });
+    }
+  });
 module.exports = router;
