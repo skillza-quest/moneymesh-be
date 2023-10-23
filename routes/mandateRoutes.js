@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Mandate = require('../models/Mandates');
 const Investor = require('../models/Investors');
+const InviteToken = require('../models/InviteTokens'); 
 const crypto = require('crypto');
 
 const inviteTokens = {};
@@ -20,20 +21,29 @@ router.post('/create', async (req, res) => {
   });
 router.get('/:mandateId', async (req, res) => {
     const { mandateId } = req.params;
+    const userId = req.query.userId;  
+    console.log("userID", userId);
     try {
       const mandate = await Mandate.findById(mandateId)
-        .populate('investors.investorId', 'name') // Populating only the 'name' of each referenced investor
-        .populate('collaboratorIds', 'name'); // Assuming collaborators are also stored with 'name' field
-  
+        .populate('investors.investorId', 'name')
+        .populate('collaboratorIds', 'name');
+
       if (!mandate) {
         return res.status(404).json({ message: 'Mandate not found' });
       }
-      res.status(200).json(mandate);
+
+      // Check if the user is either an investor or a collaborator
+      if (mandate.creatorId === userId || mandate.collaboratorIds.some(collaboratorId => collaboratorId.toString() === userId)) {
+        res.status(200).json(mandate);
+      } else {
+        return res.status(403).json({ message: 'Access denied' });
+      }
     } catch (err) {
       console.error("Error details:", err);
       res.status(400).json({ message: err.message });
     }
-  });
+});
+
 // Add an event to a Mandate
 router.post('/:mandateId/addEvent/:investorId', async (req, res) => {
     try {
@@ -95,13 +105,19 @@ router.delete('/:mandateId', async (req, res) => {
 router.get('/user/:userId', async (req, res) => {
     try {
       const userId = req.params.userId;
-      const userMandates = await Mandate.find({ creatorId: userId });
+      const userMandates = await Mandate.find({
+        $or: [
+          { creatorId: userId },
+          { collaboratorIds: userId }
+        ]
+      });
       res.status(200).json(userMandates);
     } catch (err) {
       console.error("Error details:", err);
       res.status(400).json({ message: err.message });
     }
   });
+  
 
   router.get('/:mandateId/investor/:investorId', async (req, res) => {
     const { mandateId, investorId } = req.params;
@@ -217,32 +233,61 @@ router.get('/user/:userId', async (req, res) => {
   });
     
 // Generate invite link
-  router.post('/generate-invite/:mandateId', (req, res) => {
+  router.post('/generate-invite/:mandateId', async (req, res) => {
     const { mandateId } = req.params;
     const token = crypto.randomBytes(16).toString('hex');
-    inviteTokens[token] = { mandateId, expires: Date.now() + 60000 * 60 * 24, consumed: false }; // expires in 1 day
-    res.json({ token });
+    const inviteToken = new InviteToken({
+        token,
+        mandateId,
+        expires: new Date(Date.now() + 60000 * 60 * 24),
+        consumed: false
+      });
+      console.log(inviteToken);
+      await inviteToken.save();
+      res.json({ token });
   });
   
   // Accept invite
   router.post('/accept-invite/:token', async (req, res) => {
     const { token } = req.params;
-    const invite = inviteTokens[token]; 
-      if (!invite || invite.expires < Date.now() || invite.consumed) {
+    const { userId } = req.body;    
+    console.log("TOKEN", token);
+    const invite = await InviteToken.findOne({ token });
+    if (!invite || invite.expires < Date.now() || invite.consumed) {
       return res.status(400).json({ error: 'Invalid or expired token' });
     }
-    const userId = req.userId;  
+    console.log("invite", invite);
+
     try {
       const mandate = await Mandate.findById(invite.mandateId);
       if (!mandate) {
         return res.status(404).json({ error: 'Mandate not found' });
       }
+      console.log("mandate", mandate);
       mandate.collaboratorIds.push(userId);
       await mandate.save();
       invite.consumed = true;  
-      res.json({ success: true });
+      await invite.save();  // Corrected line
+      res.status(200).json({ success: true });
     } catch (error) {
+        console.error('Error:', error);
       res.status(500).json({ error: 'Could not add collaborator' });
     }
-  });
+});
+
+router.get('/:mandateId/invite-token', async (req, res) => {
+    try {
+        const { mandateId } = req.params;
+        const inviteToken = await InviteToken.findOne({ mandateId });
+        if (inviteToken) {
+            res.json({ tokenExists: true, token: inviteToken.token, tokenExpired: inviteToken.expires < Date.now() });
+        } else {
+            res.json({ tokenExists: false });
+        }
+    } catch (error) {
+        res.status(500).json({ error: 'Could not fetch invite token information' });
+    }
+});
+
+
 module.exports = router;

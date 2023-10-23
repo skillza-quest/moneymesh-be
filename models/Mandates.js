@@ -12,7 +12,7 @@ const MandateSchema = new mongoose.Schema({
     mandateName: { type: String, required: true },  
     creatorId: { type: String, required: true },  
     investors: [InvestorInMandateSchema],
-    collaboratorIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    collaboratorIds: [String],
 }, { timestamps: true });
 
 module.exports = mongoose.model('Mandate', MandateSchema);
