@@ -173,4 +173,14 @@ async function getInvestor(req, res, next) {
   next();
 }
 
+router.get('/industries', async (req, res) => {
+  try {
+    const uniqueIndustries = await Investor.distinct('industryFocus'); 
+    console.log(uniqueIndustries);
+    res.json(uniqueIndustries);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;
