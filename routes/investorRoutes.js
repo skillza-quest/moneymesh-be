@@ -129,6 +129,24 @@ router.get('/', async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+router.get('/industries', async (req, res) => {
+  try {
+    const investors = await Investor.find({}, 'industryFocus'); 
+    const allIndustries = investors.flatMap(investor => investor.industryFocus); // Flatten the arrays
+
+    const uniqueIndustries = [...new Set(allIndustries
+      .filter(industry => typeof industry === 'string') // Ensure it's a string
+      .map(industry => industry.trim())
+    )];
+
+    console.log(uniqueIndustries);
+    res.json(uniqueIndustries);
+  } catch (err) {
+    console.error("Error fetching industries:", err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
 
 // Read One
 router.get('/:id', getInvestor, (req, res) => {
@@ -173,14 +191,6 @@ async function getInvestor(req, res, next) {
   next();
 }
 
-router.get('/industries', async (req, res) => {
-  try {
-    const uniqueIndustries = await Investor.distinct('industryFocus'); 
-    console.log(uniqueIndustries);
-    res.json(uniqueIndustries);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
+
 
 module.exports = router;
