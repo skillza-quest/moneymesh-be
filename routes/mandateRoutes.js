@@ -209,28 +209,41 @@ router.get('/user/:userId', async (req, res) => {
   });
   router.patch('/:mandateId/investors/:investorId/status', async (req, res) => {
     const { mandateId, investorId } = req.params;
-    const { status } = req.body;
-  
+    const { status, changerName } = req.body; 
+
     try {
-      const mandate = await Mandate.findById(mandateId);
-      const investorInMandate = mandate.investors.find(
-        (investor) => investor.investorId.toString() === investorId
-      );
-  
-      if (!investorInMandate) {
-        return res.status(404).json({ message: 'Investor not found in this mandate' });
-      }
-  
-      investorInMandate.mandateStatus = status;
-  
-      await mandate.save();
-  
-      res.status(200).json({ message: 'Status updated', status });
+        const mandate = await Mandate.findById(mandateId);
+        const investorInMandate = mandate.investors.find(
+            (investor) => investor.investorId.toString() === investorId
+        );
+
+        if (!investorInMandate) {
+            return res.status(404).json({ message: 'Investor not found in this mandate' });
+        }
+
+        // Capture the previous status before updating
+        const previousStatus = investorInMandate.mandateStatus;
+
+        investorInMandate.mandateStatus = status;
+
+        // Create a new event and add to the investor's events array
+        const event = {
+            type: "status",
+            notes: `Status changed from ${previousStatus} to ${status}`,
+            timestamp: new Date(),
+            status: `${status}`
+        };
+        investorInMandate.events.push(event);
+
+        await mandate.save();
+
+        res.status(200).json({ message: 'Status updated', status });
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Internal Server Error' });
+        console.error(error);
+        res.status(500).json({ message: 'Internal Server Error' });
     }
-  });
+});
+
     
 // Generate invite link
   router.post('/generate-invite/:mandateId', async (req, res) => {
