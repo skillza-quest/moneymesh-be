@@ -237,8 +237,8 @@ router.get('/user/:userId', async (req, res) => {
 
         await mandate.save();
 
-        res.status(200).json({ message: 'Status updated', status });
-    } catch (error) {
+        res.status(200).json({ message: 'Status updated', status, event });
+      } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Internal Server Error' });
     }
