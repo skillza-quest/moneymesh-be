@@ -63,22 +63,35 @@ router.post('/:mandateId/addEvent/:investorId', async (req, res) => {
 
 // Add an investor to a Mandate
 router.post('/:id/addInvestor', async (req, res) => {
-    try {
+  try {
       const mandate = await Mandate.findById(req.params.id);
+
+      if (!mandate) {
+          return res.status(404).json({ message: 'Mandate not found' });
+      }
+
+      const investorId = req.body.investorId;
+      const isInvestorAlreadyAdded = mandate.investors.some(investor => investor.investorId.toString() === investorId);
+
+      if (isInvestorAlreadyAdded) {
+          return res.status(400).json({ message: 'Already added to this mandate' });
+      }
+
       const newInvestor = {
-        investorId: req.body.investorId,
-        mandateStatus: 'new',  // default status
-        events: [],
-        notes: ''
+          investorId: investorId,
+          mandateStatus: 'new',  // default status
+          events: [],
+          notes: ''
       };
+
       mandate.investors.push(newInvestor);
       await mandate.save();
       res.status(200).json(mandate);
-    } catch (err) {
+  } catch (err) {
       res.status(400).json({ message: err.message });
-    }
-  });
-  
+  }
+});
+
 
 // Add a collaborator to a Mandate
 router.post('/:id/addCollaborator', async (req, res) => {
