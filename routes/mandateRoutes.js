@@ -92,6 +92,36 @@ router.post('/:id/addInvestor', async (req, res) => {
   }
 });
 
+// DELETE endpoint to remove an investor from a mandate
+router.delete('/:mandateId/investor/:investorId', async (req, res) => {
+  try {
+    const { mandateId, investorId } = req.params;
+    const mandate = await Mandate.findById(mandateId);
+    if (!mandate) {
+      console.log("Mandate not found");
+      return res.status(404).send('Mandate not found');
+    }
+
+    // Convert investorId to string for comparison
+    const investorIdStr = investorId.toString();
+
+    // Update the filtering logic to match the nested structure
+    mandate.investors = mandate.investors.filter(investor =>
+      investor.investorId.toString() !== investorIdStr
+    );
+
+    console.log("Updated investors array:", mandate.investors);
+
+    mandate.markModified('investors');
+    await mandate.save();
+    
+    res.status(200).send('Investor removed from the mandate');
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).send('Server error');
+  }
+});
+
 
 // Add a collaborator to a Mandate
 router.post('/:id/addCollaborator', async (req, res) => {
