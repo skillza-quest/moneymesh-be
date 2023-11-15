@@ -286,6 +286,26 @@ router.get('/user/:userId', async (req, res) => {
         res.status(500).json({ message: 'Internal Server Error' });
     }
 });
+router.put('/update/:mandateId', async (req, res) => {
+  const { mandateId } = req.params;
+  const updatedData = req.body;
+
+  try {
+    // Find the mandate by ID and update it
+    const updatedMandate = await Mandate.findByIdAndUpdate(mandateId, updatedData, { new: true });
+
+    if (!updatedMandate) {
+      return res.status(404).send('Mandate not found');
+    }
+
+    // Send the updated mandate as a response
+    res.status(200).json(updatedMandate);
+  } catch (error) {
+    console.error('Error updating mandate:', error);
+    res.status(500).send('Error updating mandate');
+  }
+});
+
 
     
 // Generate invite link

@@ -16,6 +16,7 @@ const MandateSchema = new mongoose.Schema({
     collaboratorIds: [String],
     roundType: { type: String, required: false }, 
     roundSize: { type: String, required: false }, 
+    companyName: { type: String, required: false, default: '' }, 
 }, { timestamps: true });
 
 module.exports = mongoose.model('Mandate', MandateSchema);
