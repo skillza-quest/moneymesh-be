@@ -6,7 +6,8 @@ const InvestorInMandateSchema = new mongoose.Schema({
     mandateStatus: { type: String, default: 'new' }, 
     events: [EventSchema],
     notes: String,
-    lastActivity: String
+    lastActivity: String,
+    committedAmount: { type: Number, default: 0 }
 }, { timestamps: true });
 
 const MandateSchema = new mongoose.Schema({

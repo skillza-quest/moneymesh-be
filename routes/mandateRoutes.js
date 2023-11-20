@@ -44,6 +44,33 @@ router.get('/:mandateId', async (req, res) => {
     }
 });
 
+router.patch('/:mandateId/investors/:investorId/committedAmount', async (req, res) => {
+  const { mandateId, investorId } = req.params;
+  const { committedAmount } = req.body;
+
+  try {
+      // Find the mandate and update the committedAmount for the specified investor
+      const mandate = await Mandate.findOne({ _id: mandateId, 'investors.investorId': investorId });
+
+      if (!mandate) {
+          return res.status(404).json({ message: 'Mandate or investor not found' });
+      }
+
+      // Update the committedAmount for the specific investor
+      const investorIndex = mandate.investors.findIndex(investor => investor.investorId.toString() === investorId);
+      if (investorIndex !== -1) {
+          mandate.investors[investorIndex].committedAmount = committedAmount;
+          await mandate.save();
+          res.status(200).json({ message: 'Committed amount updated successfully' });
+      } else {
+          res.status(404).json({ message: 'Investor not found in this mandate' });
+      }
+  } catch (error) {
+      console.error('Error updating committed amount:', error);
+      res.status(500).json({ message: 'Error updating committed amount', error: error.message });
+  }
+});
+
 // Add an event to a Mandate
 router.post('/:mandateId/addEvent/:investorId', async (req, res) => {
     try {
