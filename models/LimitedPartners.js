@@ -1,0 +1,36 @@
+const mongoose = require('mongoose');
+
+const LimitedPartnerSchema = new mongoose.Schema({
+  creatorId: { type: String },
+  name: { type: String, required: true },
+  type: { type: String, required: true },
+  hq: String,
+  aum: Number,
+  website: String,
+  linkedInProfile: String,
+  avgInvestmentAmount: {type: Number, default: 10000000},
+  totalInvestmentsMade: Number,
+  eligibleGpFundSize: Number,
+  gpTrackRecord: [String],
+  fundStrategy: String,
+  investmentStage: String,
+  investedFunds: [String],
+  investmentStage: String,
+  industryFocus: [String],
+  geographicFocus: String,
+  fundSize: String,
+  exitHistory: [String],
+  primaryContactName: String,
+  primaryContactPosition: String,
+  contactEmail: String,
+  contactPhone: Number,
+  rating: Number,
+  reviews: [String],
+  tags: [String],
+  timeToDecision: String,
+  notes: String,
+  status: String,
+  createdAt: { type: Date, default: Date.now },
+});
+
+module.exports = mongoose.model('LimitedPartner', LimitedPartnerSchema);
